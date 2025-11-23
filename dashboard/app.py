@@ -672,7 +672,8 @@ with tab6:
     st.header("⚙️ Configuration Settings")
     st.markdown("Edit scan.yml settings and save changes")
     
-    SCAN_YML_PATH = Path(__file__).resolve().parents[1] / 'scan.yml'
+    # In container, scan.yml is mounted at /app/scan.yml
+    SCAN_YML_PATH = Path('/app/scan.yml') if Path('/app/scan.yml').exists() else Path(__file__).resolve().parents[1] / 'scan.yml'
     
     try:
         with open(SCAN_YML_PATH, 'r') as f:
