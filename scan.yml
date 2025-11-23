@@ -1,0 +1,153 @@
+window:
+  mode: last_n_days
+  days: 30
+  include_latest_only: true
+seed_sets:
+  deps_dev_top_n: 2500
+  deps_dev_bottom_n: 250
+download:
+  concurrency: 64
+  max_retries: 5
+  backoff_ms: 500
+  user_agent: package-inferno/1.0
+npm:
+  replication_url: https://replicate.npmjs.com/_changes
+  registry_url: https://registry.npmjs.org
+  headers:
+    npm-replication-opt-in: 'true'
+aws:
+  region: us-west-2
+  s3_bucket_tarballs: package-inferno-tarballs
+  s3_bucket_extracted: package-inferno-extracted
+  s3_bucket_findings: package-inferno-findings
+  sqs_changes: package-inferno-changes
+  sqs_fetch: package-inferno-fetch
+  sqs_analyze: package-inferno-analyze
+  rds_secret_name: package-inferno/aurora/postgres
+analysis:
+  ruleset: default
+  max_extract_bytes: 0
+  dynamic_sandbox: false
+  yara:
+    enabled: true
+    rules_path: yara-rules/packages/full/yara-rules-full.yar
+    scan_mode: per_file
+    max_file_size_mb: 999999
+    timeout_seconds: 300
+  allow_domains:
+  - registry.npmjs.org
+  - nodejs.org
+  - github.com
+  - raw.githubusercontent.com
+  - objects.githubusercontent.com
+  - www.w3.org
+  - www.apache.org
+  - microsoft.com
+  - opencollective.com
+  - w3.org
+  - taobao.org
+  - gtimg.cn
+  - mozilla.org
+  - wikipedia.org
+  - aka.ms
+  - localhost
+  - tailwindcss.com
+  - jquery.com
+  - ecma-international.org
+  - tidelift.com
+  - tc39.es
+  - rxjs.dev
+  - myhuaweicloud.com
+  - reactjs.org
+  - github.io
+  - feross.org
+  - mdn.io
+  - patreon.com
+  - koolearn.com
+  - apache.org
+  - stackoverflow.com
+  - whatwg.org
+  - example.com
+  - jsperf.com
+  - 2captcha.com
+  - chromium.org
+  - man7.org
+  - qhmsg.com
+  - sequence.info
+  - ckeditor.com
+  - qhimg.com
+  - google.com
+  - ietf.org
+  - lodash.com
+  - chakra-ui.com
+  - twitter.com
+  - fb.me
+  - sonar.watch
+  - googleapis.com
+  flag_if_url_not_in_allowlist: true
+  allowlist:
+    build_tools:
+    - \bnode-gyp\b
+    - \bnode-gyp\s+rebuild\b
+    - \bnode-gyp-build\b
+    - \btsc\b
+    - \besbuild\b
+    - \brollup\b
+    - \bwebpack\b
+    - \bbabel\b
+    - \btsdx\s+build\b
+    - \bbob\s+build\b
+    - \bvite\b
+    - \bparcel\b
+    - \bswc\b
+    - \bnpm\s+run\s+(build|test|lint|clean|compile|docs|generate)\b
+    - \bnpm\s+(test|ci)\b
+    - \bpnpm\s+(build|run\s+build)\b
+    - \byarn\s+(build|run\s+build|test)\b
+    - \bbun\s+run\s+build\b
+    - \bhusky(\s+install)?\b
+    - \bsimple-git-hooks\b
+    - \bpinst\b
+    - \bis-ci\s+\|\|\b
+    - \brun-s\s+(build|lint|test|clean)\b
+    - \bcross-env\b
+    - \bpackage-check\b
+    - \bfather\s+doctor\b
+    - \bpatch-package\b
+    - \bnpx\s+only-allow\b
+    - \bmake\s+(build|ci)\b
+    - \baragon\s+contracts\s+compile\b
+    - \bhardhat\s+typechain\b
+    - \bexpo-module\s+(prepare|prepublishOnly)\b
+    - \bsvelte-kit\s+sync\b
+    - \bsymbiote\s+project\s+prepare\b
+scoring:
+  rule_weights:
+    lifecycle_exec: 4
+    suspicious_strings: 2
+    obfuscation: 3
+    new_bin_added: 1
+    network_ioc: 5
+    env_access: 4
+    packed_bundle: 2
+    ci_evasion: 3
+    c2_webhook: 6
+    writes_outside_pkg: 6
+    native_payload: 3
+    npmrc_present: 4
+    lockfile_present: 1
+    phishing_form: 8
+    fake_captcha: 4
+    external_cdn_load: 3
+    http_server: 4
+    port_binding: 4
+    script_download: 5
+    iframe_embed: 3
+    yara_match_high: 7
+    yara_match_medium: 4
+    yara_match_low: 2
+    typosquat: 8
+    advanced_obfuscation: 5
+  thresholds:
+    suspicious: 7
+    malicious: 12

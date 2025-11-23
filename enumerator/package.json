@@ -1,0 +1,16 @@
+{
+  "name": "package-inferno-enumerator",
+  "version": "0.1.0",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "@aws-sdk/client-sqs": "^3.500.0",
+    "@aws-sdk/client-secrets-manager": "^3.500.0",
+    "pg": "^8.11.3"
+  },
+  "scripts": {
+    "start": "node src/enumerator.js"
+  }
+}
+
+

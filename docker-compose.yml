@@ -1,0 +1,107 @@
+services:
+  db:
+    image: postgres:15
+    container_name: pi-postgres
+    environment:
+      POSTGRES_USER: piuser
+      POSTGRES_PASSWORD: pipass
+      POSTGRES_DB: packageinferno
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  enumerator:
+    build: ./enumerator
+    container_name: pi-enumerator
+    working_dir: /app
+    environment:
+      DAYS: "${DAYS:-30}"
+      LOCAL_ONLY: "true"
+      OUT_FILE: "/out/fetch_queue.ndjson"
+      USER_AGENT: "package-inferno/1.0"
+      DB_URL: "postgres://piuser:pipass@db:5432/packageinferno"
+      SEEDS: "${SEEDS:-}"
+      SEEDS_FILE: "${SEEDS_FILE:-}"
+      AWS_REGION: "${AWS_REGION:-us-west-2}"
+      CHUNK_LIMIT: "${CHUNK_LIMIT:-100}"
+      MAX_CHUNKS: "${MAX_CHUNKS:-5}"
+      SEED_FROM_FEED: "${SEED_FROM_FEED:-false}"
+    volumes:
+      - ./out:/out
+    depends_on:
+      - db
+    restart: "no"
+
+  fetcher:
+    build: ./fetcher
+    container_name: pi-fetcher
+    working_dir: /app
+    environment:
+      LOCAL_ONLY: "${LOCAL_ONLY:-false}"
+      IN_FILE: "/out/fetch_queue.ndjson"
+      DOWNLOAD_DIR: "/downloads"
+      S3_BUCKET: "${S3_TARBALLS}"
+      AWS_REGION: "${AWS_REGION:-us-west-2}"
+      AWS_PROFILE: "${AWS_PROFILE:-default}"
+      AWS_SDK_LOAD_CONFIG: "1"
+      USER_AGENT: "package-inferno/1.0"
+    volumes:
+      - ./out:/out
+      - ./downloads:/downloads
+      - ~/.aws:/root/.aws:ro
+    restart: "no"
+
+  analyzer:
+    build: ./analyzer
+    container_name: pi-analyzer
+    working_dir: /app
+    environment:
+      DOWNLOADS_DIR: "/downloads"
+      FINDINGS_DIR: "/out/findings"
+      MAX_EXTRACT_BYTES: "0"
+      AWS_REGION: "${AWS_REGION:-us-west-2}"
+      S3_FINDINGS: "${S3_FINDINGS}"
+      DB_URL: "postgres://piuser:pipass@db:5432/packageinferno"
+      AWS_PROFILE: "${AWS_PROFILE:-default}"
+      AWS_SDK_LOAD_CONFIG: "1"
+      SCAN_YML: "/app/scan.yml"
+    volumes:
+      - ./downloads:/downloads
+      - ./out:/out
+      - ./scan.yml:/app/scan.yml:ro
+      - ~/.aws:/root/.aws:ro
+    depends_on:
+      - db
+    command: ["bash","-lc","python src/analyzer.py && python src/upload_findings_to_s3.py"]
+    restart: "no"
+
+  dashboard:
+    image: python:3.10-slim
+    container_name: pi-dashboard
+    working_dir: /app
+    ports:
+      - "8501:8501"
+    environment:
+      DB_URL: "postgres://piuser:pipass@db:5432/packageinferno"
+    volumes:
+      - ./dashboard:/app
+    command: ["bash","-lc","pip install --no-cache-dir -r requirements.txt && streamlit run app.py --server.port 8501 --server.address 0.0.0.0"]
+    depends_on:
+      - db
+
+  init-db:
+    image: postgres:15
+    container_name: pi-initdb
+    environment:
+      PGPASSWORD: pipass
+    volumes:
+      - ./infra:/migrations:ro
+    entrypoint: ["bash","-lc","until pg_isready -h db -U piuser -d packageinferno; do sleep 1; done && psql -h db -U piuser -d packageinferno -f /migrations/migrations.sql && psql -h db -U piuser -d packageinferno -f /migrations/20251106_scan_runs.sql"]
+    depends_on:
+      - db
+    restart: "no"
+
+volumes:
+  pgdata:
