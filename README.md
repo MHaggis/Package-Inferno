@@ -1,5 +1,10 @@
 # PackageInferno
 
+<p align="center">
+  <img src="logo/packageinfernologo.png" alt="PackageInferno Logo" width="300">
+</p>
+
+
 Blazingly simple, Docker‑first npm supply‑chain scanner. One compose file runs:
 - Enumerator → builds the queue of packages
 - Fetcher → downloads tarballs (and optionally uploads to S3)
@@ -7,7 +12,7 @@ Blazingly simple, Docker‑first npm supply‑chain scanner. One compose file ru
 - Postgres → local DB for findings
 - Streamlit Dashboard → visualize findings on http://localhost:8501
 
-This is the container‑only edition. No EC2, no SQS, no RDS.
+This is the container‑only edition. The project can be built to scale using EC2, SQS and RDS. Most of it is setup for it in the toolset. 
 
 ---
 
