@@ -44,6 +44,14 @@ This is the container‑only edition. The project can be built to scale using EC
 ## Quick start (local)
 Prereqs: Docker Desktop (or engine) with Compose v2.
 
+### One-Line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MHaggis/Package-Inferno/main/install.sh | bash
+```
+
+This clones the repo to `~/package-inferno` and gives you instructions to get started.
+
 ### Option A: Use Pre-built Images (Fastest)
 
 Pull and run pre-built containers from GitHub Container Registry:
@@ -56,7 +64,7 @@ cd Package-Inferno
 # Run with pre-built images
 docker compose -f docker-compose.ghcr.yml up -d db
 ./scripts/init_db.sh
-docker compose -f docker-compose.ghcr.yml run --rm enumerator
+SEEDS="lodash,express" docker compose -f docker-compose.ghcr.yml run --rm enumerator
 docker compose -f docker-compose.ghcr.yml run --rm fetcher
 docker compose -f docker-compose.ghcr.yml run --rm analyzer
 ```
